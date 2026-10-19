@@ -1,0 +1,39 @@
+{
+  "name": "cpz5-pack",
+  "version": "1.0.0",
+  "description": "Packer/unpacker for .cpz5 archives (Purple Software / happymaher regret end). Includes .pb3 ↔ .png conversion.",
+  "type": "module",
+  "bin": {
+    "cpz5-pack": "src/cli.ts"
+  },
+  "scripts": {
+    "start": "bun run src/cli.ts",
+    "test": "bun run src/selftest.ts",
+    "build:linux": "bun build --compile --target=bun-linux-x64 src/cli.ts --outfile cpz5-pack-linux",
+    "build:windows": "bun build --compile --target=bun-windows-x64 src/cli.ts --outfile cpz5-pack.exe",
+    "build:macos": "bun build --compile --target=bun-darwin-x64 src/cli.ts --outfile cpz5-pack-macos",
+    "build:all": "bun run build:windows && bun run build:linux && bun run build:macos"
+  },
+  "keywords": [
+    "cpz5",
+    "cpz6",
+    "purple-software",
+    "happymaher",
+    "visual-novel",
+    "archive",
+    "packer",
+    "pb3",
+    "modding",
+    "game-translation"
+  ],
+  "author": "",
+  "license": "GPL-3.0",
+  "homepage": "https://github.com/greg6821-debug/cpz5-pack",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/greg6821-debug/cpz5-pack.git"
+  },
+  "bugs": {
+    "url": "https://github.com/greg6821-debug/cpz5-pack/issues"
+  }
+}

@@ -1,0 +1,33 @@
+# Binaries (built by CI, not committed)
+cpz5-pack
+cpz5-pack.exe
+cpz5-pack-linux
+cpz5-pack-macos
+*.exe
+!ref/*.exe
+
+# Distribution
+dist/
+*.zip
+
+# Test artifacts
+ref/synth.cpz
+ref/*.cpz
+ref/*.pb3
+
+# Bun
+node_modules/
+bun.lockb
+.bun/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor
+*.swp
+*.swo
+*~
+.vscode/
+.idea/

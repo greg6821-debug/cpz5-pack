@@ -1,0 +1,115 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag (e.g. v1.0.0)'
+        required: true
+        default: 'v1.0.0'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build & Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Run self-test
+        run: bun run src/selftest.ts
+
+      - name: Build Windows x64
+        run: |
+          bun build --compile --target=bun-windows-x64 src/cli.ts --outfile cpz5-pack.exe
+          ls -lh cpz5-pack.exe
+
+      - name: Build Linux x64
+        run: |
+          bun build --compile --target=bun-linux-x64 src/cli.ts --outfile cpz5-pack-linux
+          ls -lh cpz5-pack-linux
+          chmod +x cpz5-pack-linux
+
+      - name: Build macOS x64
+        run: |
+          bun build --compile --target=bun-darwin-x64 src/cli.ts --outfile cpz5-pack-macos
+          ls -lh cpz5-pack-macos
+          chmod +x cpz5-pack-macos
+
+      - name: Create distribution zip
+        run: |
+          mkdir -p dist
+          cp cpz5-pack.exe dist/
+          cp cpz5-pack-linux dist/
+          cp cpz5-pack-macos dist/
+          cp README.md dist/
+          cp LICENSE dist/
+          cd dist && zip -r cpz5-pack-release.zip . && cd ..
+          ls -lh dist/
+
+      - name: Determine version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "version=${{ inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: ${{ steps.version.outputs.version }}
+          generate_release_notes: true
+          body: |
+            ## cpz5-pack ${{ steps.version.outputs.version }}
+
+            Упаковщик/распаковщик архивов `.cpz5` для игры **happymaher (regret end)**.
+
+            ### Загрузка
+
+            | Файл | Платформа | Размер |
+            |------|-----------|--------|
+            | `cpz5-pack.exe` | Windows x64 | ~98 МБ |
+            | `cpz5-pack-linux` | Linux x64 | ~94 МБ |
+            | `cpz5-pack-macos` | macOS x64 | ~94 МБ |
+
+            ### Быстрый старт
+
+            ```bash
+            cpz5-pack.exe roundtrip game.cpz          # проверка
+            cpz5-pack.exe extract-all game.cpz out\   # распаковка + .pb3→.png
+            # отредактируйте .png в out\
+            cpz5-pack.exe build-all game.cpz out\ game.new.cpz  # сборка
+            ```
+
+            См. [README](https://github.com/${{ github.repository }}/blob/main/README.md) для полного описания.
+          files: |
+            cpz5-pack.exe
+            cpz5-pack-linux
+            cpz5-pack-macos
+            dist/cpz5-pack-release.zip
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: cpz5-pack-${{ steps.version.outputs.version }}-binaries
+          path: |
+            cpz5-pack.exe
+            cpz5-pack-linux
+            cpz5-pack-macos
+          retention-days: 90

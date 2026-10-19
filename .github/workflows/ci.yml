@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test:
+    name: Test & Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Run self-test (core crypto + round-trip)
+        run: bun run src/selftest.ts
+
+      - name: Verify CLI compiles
+        run: |
+          bun build --compile --target=bun-linux-x64 src/cli.ts --outfile /tmp/cpz5-pack-test
+          /tmp/cpz5-pack-test help | head -5
+
+      - name: Upload test binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-test-build
+          path: /tmp/cpz5-pack-test
+          retention-days: 7
